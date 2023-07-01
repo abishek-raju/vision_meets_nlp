@@ -53,7 +53,8 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating datamodule <{cfg.data._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
 
-    datamodule.calculate_mean_std_dev()
+    if cfg.print_mean_and_std:
+        datamodule.calculate_mean_std_dev()
 
     log.info(f"Instantiating model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model)
