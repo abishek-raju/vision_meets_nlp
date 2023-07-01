@@ -5,6 +5,7 @@ from lightning import LightningDataModule
 from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
 from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
+import numpy
 
 
 class MNISTDataModule(LightningDataModule):
@@ -49,7 +50,15 @@ class MNISTDataModule(LightningDataModule):
         self.save_hyperparameters(logger=False)
 
         # data transformations
-        self.transforms = transforms.Compose(
+
+        self.train_transforms = transforms.Compose(
+            [transforms.RandomRotation((-7.0, 7.0), fill=(1,)),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.1307,), (0.3081,))]
+        )
+        
+
+        self.test_transforms = transforms.Compose(
             [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
         )
 
@@ -60,6 +69,32 @@ class MNISTDataModule(LightningDataModule):
     @property
     def num_classes(self):
         return 10
+    
+    def calculate_mean_std_dev(self):
+        """
+        To calculate mean and std deviation of the given dataset
+        """
+        if not self.data_train:
+            self.setup()
+        simple_transforms = transforms.Compose([
+                                      #  transforms.Resize((28, 28)),
+                                      #  transforms.ColorJitter(brightness=0.10, contrast=0.1, saturation=0.10, hue=0.1),
+                                       transforms.ToTensor(),
+                                      #  transforms.Normalize((0.1307,), (0.3081,)) # The mean and std have to be sequences (e.g., tuples), therefore you should add a comma after the values. 
+                                       # Note the difference between (0.1307) and (0.1307,)
+                                       ])
+        exp = MNIST(self.data_train.root, train=True, download=True, transform=simple_transforms)
+        exp_data = exp.train_data
+        exp_data = exp.transform(exp_data.numpy())
+
+        print('These are the mean and standard deviation values to update.')
+        print(' - Numpy Shape:', exp.train_data.cpu().numpy().shape)
+        print(' - Tensor Shape:', exp.train_data.size())
+        print(' - min:', torch.min(exp_data))
+        print(' - max:', torch.max(exp_data))
+        print(' - mean:', torch.mean(exp_data))
+        print(' - std:', torch.std(exp_data))
+        print(' - var:', torch.var(exp_data))
 
     def prepare_data(self):
         """Download data if needed.
@@ -77,14 +112,17 @@ class MNISTDataModule(LightningDataModule):
         """
         # load and split datasets only if not loaded already
         if not self.data_train and not self.data_val and not self.data_test:
-            trainset = MNIST(self.hparams.data_dir, train=True, transform=self.transforms)
-            testset = MNIST(self.hparams.data_dir, train=False, transform=self.transforms)
+            trainset = MNIST(self.hparams.data_dir, train=True, transform=self.train_transforms)
+            testset = MNIST(self.hparams.data_dir, train=False, transform=self.test_transforms)
             dataset = ConcatDataset(datasets=[trainset, testset])
-            self.data_train, self.data_val, self.data_test = random_split(
-                dataset=dataset,
-                lengths=self.hparams.train_val_test_split,
-                generator=torch.Generator().manual_seed(42),
-            )
+            # self.data_val, self.data_test = random_split(
+            #     dataset=testset,
+            #     lengths=self.hparams.train_val_test_split,
+            #     generator=torch.Generator().manual_seed(42),
+            # )
+            self.data_train = trainset
+            self.data_val = testset
+            self.data_test = testset
 
     def train_dataloader(self):
         return DataLoader(

@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class MNISTLitModule(LightningModule):
+class CIFAR10LitModule(LightningModule):
     """Example of LightningModule for MNIST classification.
 
     A LightningModule organizes your PyTorch code into 6 sections:
@@ -37,7 +37,7 @@ class MNISTLitModule(LightningModule):
         dropout_value = 0.1
         # Input Block
         self.convblock1 = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=16, kernel_size=(3, 3), padding=0, bias=False),
+            nn.Conv2d(in_channels=3, out_channels=16, kernel_size=(3, 3), padding=0, bias=False),
             nn.ReLU(),
             nn.BatchNorm2d(16),
             nn.Dropout(dropout_value)
@@ -136,6 +136,9 @@ class MNISTLitModule(LightningModule):
         self.val_loss.reset()
         self.val_acc.reset()
         self.val_acc_best.reset()
+    
+    # def on_train_end(self):
+    #     print("**********************************End of training")
 
     def model_step(self, batch: Any):
         x, y = batch
@@ -210,4 +213,4 @@ class MNISTLitModule(LightningModule):
 
 
 if __name__ == "__main__":
-    _ = MNISTLitModule(None, None, None)
+    _ = CIFAR10LitModule(None, None, None)
