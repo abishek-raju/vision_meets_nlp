@@ -27,4 +27,4 @@ test-full: ## Run all tests
 	pytest
 
 train: ## Train the model
-	python src/train.py
+	python src/train.py experiment=mnist_experiments/iter_1.yaml

@@ -50,7 +50,15 @@ class MNISTDataModule(LightningDataModule):
         self.save_hyperparameters(logger=False)
 
         # data transformations
-        self.transforms = transforms.Compose(
+
+        self.train_transforms = transforms.Compose(
+            [transforms.RandomRotation((-7.0, 7.0), fill=(1,)),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.1307,), (0.3081,))]
+        )
+        
+
+        self.test_transforms = transforms.Compose(
             [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
         )
 
@@ -75,7 +83,7 @@ class MNISTDataModule(LightningDataModule):
                                       #  transforms.Normalize((0.1307,), (0.3081,)) # The mean and std have to be sequences (e.g., tuples), therefore you should add a comma after the values. 
                                        # Note the difference between (0.1307) and (0.1307,)
                                        ])
-        exp = MNIST(self.data_train.dataset.datasets[0].root, train=True, download=True, transform=simple_transforms)
+        exp = MNIST(self.data_train.root, train=True, download=True, transform=simple_transforms)
         exp_data = exp.train_data
         exp_data = exp.transform(exp_data.numpy())
 
@@ -104,14 +112,17 @@ class MNISTDataModule(LightningDataModule):
         """
         # load and split datasets only if not loaded already
         if not self.data_train and not self.data_val and not self.data_test:
-            trainset = MNIST(self.hparams.data_dir, train=True, transform=self.transforms)
-            testset = MNIST(self.hparams.data_dir, train=False, transform=self.transforms)
+            trainset = MNIST(self.hparams.data_dir, train=True, transform=self.train_transforms)
+            testset = MNIST(self.hparams.data_dir, train=False, transform=self.test_transforms)
             dataset = ConcatDataset(datasets=[trainset, testset])
-            self.data_train, self.data_val, self.data_test = random_split(
-                dataset=dataset,
-                lengths=self.hparams.train_val_test_split,
-                generator=torch.Generator().manual_seed(42),
-            )
+            # self.data_val, self.data_test = random_split(
+            #     dataset=testset,
+            #     lengths=self.hparams.train_val_test_split,
+            #     generator=torch.Generator().manual_seed(42),
+            # )
+            self.data_train = trainset
+            self.data_val = testset
+            self.data_test = testset
 
     def train_dataloader(self):
         return DataLoader(

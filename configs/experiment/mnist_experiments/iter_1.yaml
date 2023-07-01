@@ -26,7 +26,8 @@ model:
     lr: 0.002
 
 data:
-  batch_size: 64
+  batch_size: 512
+  num_workers: 4
 
 logger:
   wandb:
@@ -34,3 +35,6 @@ logger:
     group: "mnist"
   aim:
     experiment: "mnist"
+
+visualizations:
+  display_sample_image: True
