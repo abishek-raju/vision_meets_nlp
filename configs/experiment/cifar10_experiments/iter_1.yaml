@@ -40,4 +40,10 @@ logger:
     experiment: "mnist"
 
 visualizations:
-  display_sample_image: True
+  display_sample_image: 10
+  
+  each_epoch_visualization: True
+  correctly_identified: 10
+  incorrectly_identified: 10
+
+  sample_set_output: 10
