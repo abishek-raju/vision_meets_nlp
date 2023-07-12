@@ -23,6 +23,7 @@ trainer:
   fast_dev_run: True
 
 model:
+  _target_: src.models.cifar10_groupnorm.CIFAR10LitModule
   optimizer:
     lr: 0.002
 
