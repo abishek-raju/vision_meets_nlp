@@ -12,7 +12,7 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["cifar10", "first_try"]
+tags: ["cifar10", "batchnorm"]
 
 seed: 12345
 
@@ -23,7 +23,7 @@ trainer:
   fast_dev_run: True
 
 model:
-  _target_: src.models.cifar10_groupnorm.CIFAR10LitModule
+  _target_: src.models.cifar10_module.CIFAR10LitModule
   optimizer:
     lr: 0.002
 

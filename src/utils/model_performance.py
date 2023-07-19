@@ -55,10 +55,10 @@ def get_correct_and_misclassified_images_grid(model,test_loader,number_of_images
     plt.savefig(img_buf, format='png')
 
     im = Image.open(img_buf)
+    correct_classified_grid = numpy.transpose(numpy.asarray(im)[:,:,:3],(2,0,1))
     im.show(title="My Image")
 
     img_buf.close()
-    correct_classified_grid = im
     
     figure = plt.figure(figsize=(10, 10))
     figure.suptitle(str(test_loader.dataset.class_to_idx) + '\n', fontsize=16)
@@ -73,9 +73,9 @@ def get_correct_and_misclassified_images_grid(model,test_loader,number_of_images
     plt.savefig(img_buf, format='png')
 
     im = Image.open(img_buf)
+    mis_classified_grid = numpy.transpose(numpy.asarray(im)[:,:,:3],(2,0,1))
     im.show(title="My Image")
 
     img_buf.close()
-    mis_classified_grid = im
     
-    return numpy.transpose(numpy.asarray(correct_classified_grid)[:,:,:3],(2,0,1)),numpy.transpose(numpy.asarray(mis_classified_grid)[:,:,:3],(2,0,1))
+    return correct_classified_grid,mis_classified_grid

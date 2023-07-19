@@ -89,7 +89,7 @@ class CIFAR10LitModule(LightningModule):
         ) # output_size = 1
 
         self.convblock8 = nn.Sequential(
-            nn.Conv2d(in_channels=16, out_channels=10, kernel_size=(1, 1), padding=0, bias=False),
+            nn.Conv2d(in_channels=16, out_channels=10, kernel_size=(1, 1), padding=1, bias=False),
             # nn.BatchNorm2d(10),
             # nn.ReLU(),
             # nn.Dropout(dropout_value)
