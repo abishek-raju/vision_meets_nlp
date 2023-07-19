@@ -1295,3 +1295,6 @@ You can override any parameter from command line like this
 ```bash
 python src/train.py trainer.max_epochs=20 data.batch_size=64
 ```
+Batchnorm tensorboard
+
+https://tensorboard.dev/experiment/MJqbyL5JT6yl8IecBobq0w/
