@@ -55,6 +55,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     if cfg.print_mean_and_std:
         datamodule.calculate_mean_std_dev()
+    
 
     log.info(f"Instantiating model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model)
@@ -67,6 +68,11 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
+
+    if cfg.visualizations.display_sample_image:
+        log.info(f"Displaying sample image")
+        sample_image_grid = datamodule.get_sample_images(cfg.visualizations.display_sample_image)
+        logger[0].experiment.add_image("Sample input", sample_image_grid)
 
     object_dict = {
         "cfg": cfg,
@@ -99,6 +105,14 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
             ckpt_path = None
         trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
         log.info(f"Best ckpt path: {ckpt_path}")
+
+    if cfg.visualizations.correctly_identified:
+        log.info(f"Generating {cfg.visualizations.correctly_identified} correctly identified samples")
+        (correct_classified,
+        mis_classified) = utils.model_performance.get_correct_and_misclassified_images_grid(model,
+                                                                                datamodule.test_dataloader())
+        logger[0].experiment.add_image("Correct Classified", correct_classified)
+        logger[0].experiment.add_image("Mis Classified", mis_classified)
 
     test_metrics = trainer.callback_metrics
 

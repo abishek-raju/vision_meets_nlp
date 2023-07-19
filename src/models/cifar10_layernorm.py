@@ -39,7 +39,7 @@ class CIFAR10LitModule(LightningModule):
         self.convblock1 = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
             nn.ReLU(),
-            nn.BatchNorm2d(32),
+            nn.GroupNorm(1,32),
             nn.Dropout(dropout_value)
         ) # output_size = 26
 
@@ -47,7 +47,7 @@ class CIFAR10LitModule(LightningModule):
         self.convblock2 = nn.Sequential(
             nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
             nn.ReLU(),
-            nn.BatchNorm2d(32),
+            nn.GroupNorm(1,32),
             nn.Dropout(dropout_value)
         ) # output_size = 24
 
@@ -61,25 +61,25 @@ class CIFAR10LitModule(LightningModule):
         self.convblock4 = nn.Sequential(
             nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
             nn.ReLU(),            
-            nn.BatchNorm2d(32),
+            nn.GroupNorm(1,32),
             nn.Dropout(dropout_value)
         ) # output_size = 10
         self.convblock5 = nn.Sequential(
             nn.Conv2d(in_channels=32, out_channels=16, kernel_size=(3, 3), padding=1, bias=False),
             nn.ReLU(),            
-            nn.BatchNorm2d(16),
+            nn.GroupNorm(1,16),
             nn.Dropout(dropout_value)
         ) # output_size = 8
         self.convblock6 = nn.Sequential(
             nn.Conv2d(in_channels=16, out_channels=16, kernel_size=(3, 3), padding=1, bias=False),
             nn.ReLU(),            
-            nn.BatchNorm2d(16),
+            nn.GroupNorm(1,16),
             nn.Dropout(dropout_value)
         ) # output_size = 6
         self.convblock7 = nn.Sequential(
             nn.Conv2d(in_channels=16, out_channels=16, kernel_size=(3, 3), padding=1, bias=False),
             nn.ReLU(),            
-            nn.BatchNorm2d(16),
+            nn.GroupNorm(1,16),
             nn.Dropout(dropout_value)
         ) # output_size = 6
         
