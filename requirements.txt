@@ -25,3 +25,4 @@ pytest          # tests
 
 tensorflow
 matplotlib
+albumentations

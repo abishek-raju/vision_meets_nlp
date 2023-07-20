@@ -138,9 +138,9 @@ class CIFAR10LitModule(LightningModule):
         self.gap = nn.Sequential(nn.AvgPool2d(kernel_size = 8)
         )
 
-        self.fc1 = nn.Linear(32, 16)
-        self.fc2 = nn.Linear(16, 10)
-
+        self.fc1 = nn.Linear(32, 20)
+        self.fc2 = nn.Linear(20, 14)
+        self.fc3 = nn.Linear(14, 10)
 
         
         self.dropout = nn.Dropout(dropout_value)
@@ -167,15 +167,15 @@ class CIFAR10LitModule(LightningModule):
         x = self.convblock1_l2(x)
         x = self.convblock1_l3(x)
 
-        x = self.convblock2_l1(x)
+        x = x + self.convblock2_l1(x)
         x = self.convblock2_l2(x)
         x = self.convblock2_l3(x)
 
-        x = self.convblock3_l1(x)
+        x = x + self.convblock3_l1(x)
         x = self.convblock3_l2(x)
         x = self.convblock3_l3(x)
 
-        x = self.convblock4_l1(x)
+        x = x + self.convblock4_l1(x)
         x = self.convblock4_l2(x)
         x = self.convblock4_l3(x)
 
@@ -185,6 +185,7 @@ class CIFAR10LitModule(LightningModule):
 
         x = self.fc1(x)
         x = self.fc2(x)
+        x = self.fc3(x)
         
         return F.log_softmax(x, dim=-1)
 
