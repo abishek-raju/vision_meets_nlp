@@ -64,9 +64,13 @@ class CIFAR10DataModule(LightningDataModule):
         # )
         self.train_transforms = A.Compose([
                 A.HorizontalFlip(p=0.5),
+                A.ShiftScaleRotate(),
+                A.CoarseDropout(max_holes = 1, max_height=16, max_width=16, min_holes = 1, 
+                                min_height=16, min_width=16, fill_value=(0.49139968,0.48215827,0.44653124),
+                                 mask_fill_value = None),
                 A.Normalize(
-                mean=[0.5, 0.5, 0.5],
-                std=[0.5, 0.5, 0.5],
+                mean=[0.49139968,0.48215827,0.44653124],
+                std=[0.24703233,0.24348505,0.26158768],
                 ),
                 ToTensorV2()
 
@@ -79,8 +83,8 @@ class CIFAR10DataModule(LightningDataModule):
 
         self.test_transforms = A.Compose([
                 A.Normalize(
-                mean=[0.5, 0.5, 0.5],
-                std=[0.5, 0.5, 0.5],
+                mean=[0.49139968,0.48215827,0.44653124],
+                std=[0.24703233,0.24348505,0.26158768],
                 ),
                 ToTensorV2()
 
@@ -110,10 +114,6 @@ class CIFAR10DataModule(LightningDataModule):
         #                                ])
 
         simple_transforms = A.Compose([
-                A.Normalize(
-                mean=[0.5, 0.5, 0.5],
-                std=[0.5, 0.5, 0.5],
-                ),
                 ToTensorV2()
 
         ])
@@ -153,13 +153,54 @@ class CIFAR10DataModule(LightningDataModule):
         #                                ])
         simple_transforms = A.Compose([
                 A.Normalize(
-                mean=[0.5, 0.5, 0.5],
-                std=[0.5, 0.5, 0.5],
+                mean=[0.49139968,0.48215827,0.44653124],
+                std=[0.24703233,0.24348505,0.26158768],
                 ),
                 ToTensorV2()
 
         ])
         cifar_trainset = CIFAR10(self.data_train.root, train=True, download=True, transform=simple_transforms)
+
+        imgs = [item[0] for item in cifar_trainset] 
+
+        self.sample_dict = {}
+        self.idx_to_key = {}
+
+        for key in cifar_trainset.class_to_idx:
+            # print(key, '->', cifar_trainset.class_to_idx[key])
+            self.sample_dict[key] = []
+            self.idx_to_key[cifar_trainset.class_to_idx[key]] = key
+
+        for i,target in enumerate(cifar_trainset.targets):
+            # print(i,target,idx_to_key[target])
+            self.sample_dict[self.idx_to_key[target]].append({"index" : i,"img" : imgs[i]})
+        
+        images_to_display = []
+        for key in self.sample_dict:
+            for img in self.sample_dict[key][:number_of_samples]:
+                images_to_display.append(img["img"])
+
+        
+        grid_img = torchvision.utils.make_grid(images_to_display, nrow=number_of_samples)
+        return grid_img
+    
+    def get_sample_images_transformed(self,number_of_samples = 10):
+        """Return sample images
+            number_of_samples: int: 10
+        """
+        if not self.data_train:
+            self.prepare_data()
+            self.setup()
+
+        # simple_transforms = transforms.Compose([
+        #                                transforms.Resize((64, 64)),
+        #                               #  transforms.ColorJitter(brightness=0.10, contrast=0.1, saturation=0.10, hue=0.1),
+        #                                transforms.ToTensor(),
+        #                               #  transforms.Normalize((0.1307,), (0.3081,)) # The mean and std have to be sequences (e.g., tuples), therefore you should add a comma after the values. 
+        #                                # Note the difference between (0.1307) and (0.1307,)
+        #                                ])
+
+        cifar_trainset = CIFAR10(self.data_train.root, train=True, download=True, transform=self.train_transforms)
 
         imgs = [item[0] for item in cifar_trainset] 
 

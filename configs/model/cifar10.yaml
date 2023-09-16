@@ -6,6 +6,24 @@ optimizer:
   lr: 0.001
   weight_decay: 0.0
 
+
+
+# scheduler:
+#   _target_: torch.optim.lr_scheduler.OneCycleLR
+#   _partial_: true
+#   optimizer:
+#     _target_: torch.optim.Adam
+#     _partial_: true
+#     lr: 0.00001
+#     weight_decay: 0.0
+#   max_lr: 4.79E-02
+#   epochs: 24
+#   pct_start: 0.208
+#   div_factor: 100
+#   three_phase: False
+#   anneal_strategy: 'linear'
+#   steps_per_epoch: 100
+
 scheduler:
   _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
   _partial_: true

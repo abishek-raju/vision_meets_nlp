@@ -6,6 +6,7 @@ from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import Accuracy
 import torch.nn as nn
 import torch.nn.functional as F
+from src.models.custom_resnet import Custom_ResNet
 
 
 class CIFAR10LitModule(LightningModule):
@@ -35,112 +36,8 @@ class CIFAR10LitModule(LightningModule):
         self.save_hyperparameters(logger=False)
 
         dropout_value = 0.1
-        # CONVOLUTION BLOCK 1 LAYER 1
-        self.convblock1_l1 = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-            nn.Dropout(dropout_value)
-        ) # output_size = 32
 
-        # CONVOLUTION BLOCK 1 LAYER 2
-        self.convblock1_l2 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-            nn.Dropout(dropout_value)
-        ) # output_size = 32
-
-        # CONVOLUTION BLOCK 1 LAYER 3
-        self.convblock1_l3 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=0, bias=False,
-                    dilation = 3 ),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-        ) # output_size = 26
-
-
-
-        # CONVOLUTION BLOCK 2 LAYER 1
-        self.convblock2_l1 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-            nn.Dropout(dropout_value)
-        ) # output_size = 26
-
-        # CONVOLUTION BLOCK 2 LAYER 2
-        self.convblock2_l2 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-            nn.Dropout(dropout_value)
-        ) # output_size = 26
-
-        # CONVOLUTION BLOCK 2 LAYER 3
-        self.convblock2_l3 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=0, bias=False,
-                    dilation = 3 ),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-        ) # output_size = 20
-        
-        # CONVOLUTION BLOCK 3 LAYER 1
-        self.convblock3_l1 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-            nn.Dropout(dropout_value)
-        ) # output_size = 20
-
-        # CONVOLUTION BLOCK 3 LAYER 2
-        self.convblock3_l2 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-            nn.Dropout(dropout_value)
-        ) # output_size = 20
-
-        # CONVOLUTION BLOCK 3 LAYER 3
-        self.convblock3_l3 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=0, bias=False,
-                    dilation = 3 ),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-        ) # output_size = 14
-
-
-
-        # CONVOLUTION BLOCK 4 LAYER 1
-        self.convblock4_l1 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-            nn.Dropout(dropout_value)
-        ) # output_size = 14
-
-        # CONVOLUTION BLOCK 4 LAYER 2
-        self.convblock4_l2 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-            nn.Dropout(dropout_value)
-        ) # output_size = 14
-
-        # CONVOLUTION BLOCK 4 LAYER 3
-        self.convblock4_l3 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=0, bias=False,
-                    dilation = 3 ),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-        ) # output_size = 8
-
-        self.gap = nn.Sequential(nn.AvgPool2d(kernel_size = 8)
-        )
-
-        self.fc1 = nn.Linear(32, 20)
-        self.fc2 = nn.Linear(20, 14)
-        self.fc3 = nn.Linear(14, 10)
+        self.model_ = Custom_ResNet()
 
         
         self.dropout = nn.Dropout(dropout_value)
@@ -163,31 +60,10 @@ class CIFAR10LitModule(LightningModule):
         self.val_acc_best = MaxMetric()
 
     def forward(self, x: torch.Tensor):
-        x = self.convblock1_l1(x)
-        x = self.convblock1_l2(x)
-        x = self.convblock1_l3(x)
 
-        x = x + self.convblock2_l1(x)
-        x = self.convblock2_l2(x)
-        x = self.convblock2_l3(x)
-
-        x = x + self.convblock3_l1(x)
-        x = self.convblock3_l2(x)
-        x = self.convblock3_l3(x)
-
-        x = x + self.convblock4_l1(x)
-        x = self.convblock4_l2(x)
-        x = self.convblock4_l3(x)
-
-        x = self.gap(x)
-
-        x = x.view(-1, 32)
-
-        x = self.fc1(x)
-        x = self.fc2(x)
-        x = self.fc3(x)
+        x = self.model_.forward(x)
         
-        return F.log_softmax(x, dim=-1)
+        return x
 
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
@@ -214,6 +90,7 @@ class CIFAR10LitModule(LightningModule):
         self.train_acc(preds, targets)
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/lr", self.get_lr(), on_step=False, on_epoch=True, prog_bar=True)
 
         # return loss or backpropagation will fail
         return loss
@@ -249,6 +126,10 @@ class CIFAR10LitModule(LightningModule):
     def on_test_epoch_end(self):
         pass
 
+    def get_lr(self):
+        for param_group in self.lr_schedulers().optimizer.param_groups:
+            return param_group['lr']
+
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization.
         Normally you'd need one. But in the case of GANs or similar you might have multiple.
@@ -263,8 +144,8 @@ class CIFAR10LitModule(LightningModule):
                 "optimizer": optimizer,
                 "lr_scheduler": {
                     "scheduler": scheduler,
-                    "monitor": "val/loss",
-                    "interval": "epoch",
+                    "monitor": "train/loss",
+                    "interval": "step",
                     "frequency": 1,
                 },
             }
