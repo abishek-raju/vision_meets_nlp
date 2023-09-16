@@ -69,10 +69,18 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
 
-    if cfg.visualizations.display_sample_image:
+    if cfg.visualizations.display_sample_image and not cfg.trainer.fast_dev_run:
         log.info(f"Displaying sample image")
         sample_image_grid = datamodule.get_sample_images(cfg.visualizations.display_sample_image)
         logger[0].experiment.add_image("Sample input", sample_image_grid)
+
+        log.info(f"Displaying Transformed sample image")
+        sample_image_grid = datamodule.get_sample_images_transformed(cfg.visualizations.display_sample_image)
+        logger[0].experiment.add_image("Sample Transformed input", sample_image_grid)
+    else:
+        log.info(f"Skipping Displaying sample image")
+        log.info(f"Skipping Displaying Transformed sample image")
+        
 
     object_dict = {
         "cfg": cfg,
@@ -90,6 +98,17 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     if cfg.get("compile"):
         log.info("Compiling model!")
         model = torch.compile(model)
+    
+    if cfg.find_lr.find_lr:
+        log.info("Finding optimal LR")
+        optimizer = model.configure_optimizers()["optimizer"]
+        criterion = model.criterion
+        if not datamodule.data_train:
+            datamodule.prepare_data()
+            datamodule.setup()
+        end_lr = cfg.find_lr.end_lr
+        num_iter = cfg.find_lr.num_iter
+        utils.lr_finder.get_lr(model,optimizer,criterion,datamodule.train_dataloader(),end_lr,num_iter,device = model.device)
 
     if cfg.get("train"):
         log.info("Starting training!")
@@ -106,7 +125,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
         trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
         log.info(f"Best ckpt path: {ckpt_path}")
 
-    if cfg.visualizations.correctly_identified:
+    if cfg.visualizations.correctly_identified and not cfg.trainer.fast_dev_run:
         log.info(f"Generating {cfg.visualizations.correctly_identified} correctly identified samples")
         (correct_classified,
         mis_classified) = utils.model_performance.get_correct_and_misclassified_images_grid(model,

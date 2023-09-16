@@ -7,7 +7,7 @@ defaults:
   - override /data: cifar10.yaml
   - override /model: cifar10.yaml
   - override /callbacks: default.yaml
-  - override /trainer: default.yaml
+  - override /trainer: gpu.yaml
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
@@ -18,9 +18,9 @@ seed: 12345
 
 trainer:
   min_epochs: 0
-  max_epochs: 1
+  max_epochs: 24
   gradient_clip_val: 0.5
-  fast_dev_run: True
+  fast_dev_run: False
 
 model:
   _target_: src.models.cifar10_module.CIFAR10LitModule
@@ -28,7 +28,7 @@ model:
     lr: 0.01
 
 data:
-  batch_size: 512
+  batch_size: 256
   num_workers: 4
 
 print_mean_and_std: False
@@ -50,7 +50,7 @@ visualizations:
   sample_set_output: 10
 
 find_lr:
-  find_lr: True
+  find_lr: False
   end_lr: 10
   num_iter: 100
   

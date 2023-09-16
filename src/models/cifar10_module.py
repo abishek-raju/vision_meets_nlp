@@ -6,6 +6,7 @@ from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import Accuracy
 import torch.nn as nn
 import torch.nn.functional as F
+from src.models.custom_resnet import Custom_ResNet
 
 
 class CIFAR10LitModule(LightningModule):
@@ -35,67 +36,10 @@ class CIFAR10LitModule(LightningModule):
         self.save_hyperparameters(logger=False)
 
         dropout_value = 0.1
-        # Input Block
-        self.convblock1 = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-            nn.Dropout(dropout_value)
-        ) # output_size = 26
 
-        # CONVOLUTION BLOCK 1
-        self.convblock2 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-            nn.Dropout(dropout_value)
-        ) # output_size = 24
+        self.model_ = Custom_ResNet()
 
-        # TRANSITION BLOCK 1
-        self.convblock3 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(1, 1), padding=0, bias=False),
-        ) # output_size = 24
-        self.pool1 = nn.MaxPool2d(2, 2) # output_size = 12
-
-        # CONVOLUTION BLOCK 2
-        self.convblock4 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),            
-            nn.BatchNorm2d(32),
-            nn.Dropout(dropout_value)
-        ) # output_size = 10
-        self.convblock5 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=16, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),            
-            nn.BatchNorm2d(16),
-            nn.Dropout(dropout_value)
-        ) # output_size = 8
-        self.convblock6 = nn.Sequential(
-            nn.Conv2d(in_channels=16, out_channels=16, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),            
-            nn.BatchNorm2d(16),
-            nn.Dropout(dropout_value)
-        ) # output_size = 6
-        self.convblock7 = nn.Sequential(
-            nn.Conv2d(in_channels=16, out_channels=16, kernel_size=(3, 3), padding=1, bias=False),
-            nn.ReLU(),            
-            nn.BatchNorm2d(16),
-            nn.Dropout(dropout_value)
-        ) # output_size = 6
         
-        # OUTPUT BLOCK
-        self.gap = nn.Sequential(
-            nn.AvgPool2d(kernel_size=12)
-        ) # output_size = 1
-
-        self.convblock8 = nn.Sequential(
-            nn.Conv2d(in_channels=16, out_channels=10, kernel_size=(1, 1), padding=0, bias=False),
-            # nn.BatchNorm2d(10),
-            # nn.ReLU(),
-            # nn.Dropout(dropout_value)
-        ) 
-
-
         self.dropout = nn.Dropout(dropout_value)
 
 
@@ -116,19 +60,10 @@ class CIFAR10LitModule(LightningModule):
         self.val_acc_best = MaxMetric()
 
     def forward(self, x: torch.Tensor):
-        x = self.convblock1(x)
-        x = self.convblock2(x)
-        x = x + self.convblock3(x)
-        x = self.pool1(x)
-        x = x + self.convblock4(x)
-        x = self.convblock5(x)
-        x = self.convblock6(x)
-        x = x + self.convblock7(x)
-        x = self.gap(x)        
-        x = self.convblock8(x)
 
-        x = x.view(-1, 10)
-        return F.log_softmax(x, dim=-1)
+        x = self.model_.forward(x)
+        
+        return x
 
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
@@ -155,6 +90,7 @@ class CIFAR10LitModule(LightningModule):
         self.train_acc(preds, targets)
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/lr", self.get_lr(), on_step=False, on_epoch=True, prog_bar=True)
 
         # return loss or backpropagation will fail
         return loss
@@ -190,6 +126,10 @@ class CIFAR10LitModule(LightningModule):
     def on_test_epoch_end(self):
         pass
 
+    def get_lr(self):
+        for param_group in self.lr_schedulers().optimizer.param_groups:
+            return param_group['lr']
+
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization.
         Normally you'd need one. But in the case of GANs or similar you might have multiple.
@@ -204,8 +144,8 @@ class CIFAR10LitModule(LightningModule):
                 "optimizer": optimizer,
                 "lr_scheduler": {
                     "scheduler": scheduler,
-                    "monitor": "val/loss",
-                    "interval": "epoch",
+                    "monitor": "train/loss",
+                    "interval": "step",
                     "frequency": 1,
                 },
             }
