@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 
 
 class BilingualDataset(Dataset):
-    def __init__(self, ds, tokenizer_src, tokenizer_tgt,src_lang,tgt_lang,seq_len):
+    def __init__(self, ds, tokenizer_src, tokenizer_tgt,src_lang,tgt_lang,seq_len, max_seq_len = 150,truncate_sentence = True):
         super().__init__()
         self.seq_len = seq_len
         self.ds = ds
@@ -12,6 +12,8 @@ class BilingualDataset(Dataset):
         self.tokenizer_tgt = tokenizer_tgt
         self.src_lang = src_lang
         self.tgt_lang = tgt_lang
+        self.max_seq_len = max_seq_len
+        self.truncate_sentence = truncate_sentence
 
         self.sos_token = torch.tensor([tokenizer_tgt.token_to_id("[SOS]")],dtype=torch.int64)
         self.eos_token = torch.tensor([tokenizer_tgt.token_to_id("[EOS]")],dtype=torch.int64)
@@ -29,6 +31,14 @@ class BilingualDataset(Dataset):
         # Transform the text into tokens
         enc_input_tokens = self.tokenizer_src.encode(src_text).ids
         dec_input_tokens = self.tokenizer_tgt.encode(tgt_text).ids
+
+        # Restrict the number of tokens to the max_seq_len
+        if self.truncate_sentence and len(enc_input_tokens) > self.max_seq_len:
+            enc_input_tokens = enc_input_tokens[:self.max_seq_len]
+
+        if self.truncate_sentence and len(dec_input_tokens) > self.max_seq_len:
+            dec_input_tokens = dec_input_tokens[:self.max_seq_len]
+
 
         # Add sos, eos and padding to each sentence
         enc_num_padding_tokens = self.seq_len - len(enc_input_tokens) - 2 # We will add <s> and </s>
