@@ -125,7 +125,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
         trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
         log.info(f"Best ckpt path: {ckpt_path}")
 
-    if cfg.visualizations.correctly_identified and not cfg.trainer.fast_dev_run:
+    if cfg.visualizations.correctly_identified and cfg.visualizations.generate and not cfg.trainer.fast_dev_run:
         log.info(f"Generating {cfg.visualizations.correctly_identified} correctly identified samples")
         (correct_classified,
         mis_classified) = utils.model_performance.get_correct_and_misclassified_images_grid(model,
