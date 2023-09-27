@@ -35,14 +35,15 @@ class SentencesDataset(Dataset):
         self,
         train_file_path: str,
         vocab_file_path: str,
-        seq_len: int,
-        n_vocab: int,
+        seq_len: int = 20,
+        n_vocab: int = 40000,
 
     ) -> None:
 
         self.train_file_path = train_file_path
         self.n_vocab = n_vocab
         self.vocab_file_path = vocab_file_path
+        self.seq_len = seq_len
 
         self.sentences = open(self.train_file_path).read().lower().split('\n')
         self.special_chars = ',?;.:/*!+-()[]{}"\'&'

@@ -1,0 +1,10 @@
+_target_: src.data.sentences_datamodule.Sentences_Datamodule
+data_dir: ${paths.data_dir}
+batch_size: 128
+train_val_test_split: [55_000, 5_000, 10_000]
+num_workers: 0
+pin_memory: False
+train_file_path: "data/sentences/training.txt"
+vocab_file_path: "data/sentences/vocab.txt"
+seq_len: 20
+n_vocab: 40000

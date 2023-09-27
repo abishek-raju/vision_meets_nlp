@@ -4,8 +4,8 @@
 # python train.py experiment=example
 
 defaults:
-  - override /data: pizza_steak_sushi.yaml
-  - override /model: vit_finetuning.yaml
+  - override /data: sentences_data.yaml
+  - override /model: bert.yaml
   - override /callbacks: default.yaml
   - override /trainer: default.yaml
 
@@ -20,14 +20,14 @@ trainer:
   min_epochs: 0
   max_epochs: 1
   gradient_clip_val: 0.5
-  fast_dev_run: True
+  fast_dev_run: False
 
 
 data:
   batch_size: 256
   num_workers: 4
 
-print_mean_and_std: True
+print_mean_and_std: False
 
 logger:
   wandb:
@@ -37,12 +37,14 @@ logger:
     experiment: "cifar"
 
 visualizations:
-  generate: False
-  display_sample_image: 10
+  generate: True
+  display_number_of_sample: 10
   
   each_epoch_visualization: True
+  generate_output_images: False
   correctly_identified: 10
   incorrectly_identified: 10
+  
 
   sample_set_output: 10
 
