@@ -56,9 +56,13 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     if cfg.print_mean_and_std:
         datamodule.calculate_mean_std_dev()
     
-
+    if not datamodule.data_train:
+        datamodule.prepare_data()
+        datamodule.setup()
+    
     log.info(f"Instantiating model <{cfg.model._target_}>")
-    model: LightningModule = hydra.utils.instantiate(cfg.model)
+    model: LightningModule = hydra.utils.instantiate(cfg.model,n_embeddings=len(datamodule.data_train.vocab))
+    model.configure_loss(datamodule.data_train.IGNORE_IDX)
 
     log.info("Instantiating callbacks...")
     callbacks: List[Callback] = utils.instantiate_callbacks(cfg.get("callbacks"))
@@ -69,14 +73,16 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
 
-    if cfg.visualizations.display_sample_image and not cfg.trainer.fast_dev_run:
-        log.info(f"Displaying sample image")
-        sample_image_grid = datamodule.get_sample_images(cfg.visualizations.display_sample_image)
-        logger[0].experiment.add_image("Sample input", sample_image_grid)
+    if cfg.visualizations.generate and not cfg.trainer.fast_dev_run:
+        log.info(f"Displaying sample")
+        text_samples,output_samples = datamodule.get_samples(cfg.visualizations.display_number_of_sample)
+        for count,i in enumerate(zip(text_samples,output_samples)):
+            logger[0].experiment.add_text("Sample " + str(count), i[0] + "  \n", 0)
+            logger[0].experiment.add_text("Sample " + str(count), i[1] + "  \n", 0)
 
-        log.info(f"Displaying Transformed sample image")
-        sample_image_grid = datamodule.get_sample_images_transformed(cfg.visualizations.display_sample_image)
-        logger[0].experiment.add_image("Sample Transformed input", sample_image_grid)
+        # log.info(f"Displaying Transformed sample image")
+        # sample_image_grid = datamodule.get_sample_images_transformed(cfg.visualizations.display_number_of_sample)
+        # logger[0].experiment.add_image("Sample Transformed input", sample_image_grid)
     else:
         log.info(f"Skipping Displaying sample image")
         log.info(f"Skipping Displaying Transformed sample image")
@@ -125,7 +131,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
         trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
         log.info(f"Best ckpt path: {ckpt_path}")
 
-    if cfg.visualizations.correctly_identified and not cfg.trainer.fast_dev_run:
+    if cfg.visualizations.generate_output_images and cfg.visualizations.correctly_identified and cfg.visualizations.generate and not cfg.trainer.fast_dev_run:
         log.info(f"Generating {cfg.visualizations.correctly_identified} correctly identified samples")
         (correct_classified,
         mis_classified) = utils.model_performance.get_correct_and_misclassified_images_grid(model,
