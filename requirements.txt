@@ -27,3 +27,6 @@ tensorflow
 matplotlib
 albumentations
 torch-lr-finder
+
+open_clip_torch
+gradio
