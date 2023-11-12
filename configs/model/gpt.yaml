@@ -1,0 +1,9 @@
+_target_: src.models.bigram_language_pl.BigramLanguageModelLitModule
+vocab_size : 65
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 1e-4
+  weight_decay: 1e-4
+scheduler : null
+

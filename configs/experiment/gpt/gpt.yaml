@@ -1,0 +1,57 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /data: tinyshakespeare.yaml
+  - override /model: gpt.yaml
+  - override /callbacks: default.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["llm", "nanogpt"]
+
+seed: 12345
+
+trainer:
+  min_epochs: 0
+  max_epochs: 1
+  gradient_clip_val: 0.5
+  fast_dev_run: True
+
+
+data:
+  batch_size: 256
+  num_workers: 4
+
+print_mean_and_std: False
+
+logger:
+  wandb:
+    tags: ${tags}
+    group: "cifar"
+  aim:
+    experiment: "cifar"
+
+visualizations:
+  generate: False
+  display_number_of_sample: 10
+  
+  each_epoch_visualization: True
+  generate_output_images: False
+  correctly_identified: 10
+  incorrectly_identified: 10
+  
+
+  sample_set_output: 10
+
+find_lr:
+  find_lr: False
+  end_lr: 10
+  num_iter: 100
+  
+train: True
+test: False
